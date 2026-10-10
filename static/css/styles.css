@@ -1,0 +1,135 @@
+/* RailSathi AI - Custom Railway Command Design System */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+  --navy-deep: #070F2B;
+  --navy-card: #0F1E3D;
+  --navy-border: #1E3E62;
+  --blue-primary: #1B56FD;
+  --blue-glow: rgba(27, 86, 253, 0.4);
+  --emerald-safe: #10B981;
+  --amber-warn: #F59E0B;
+  --red-alert: #EF4444;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #060D1E;
+  color: #F1F5F9;
+  overflow-x: hidden;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glass Card */
+.glass-panel {
+  background: rgba(15, 30, 61, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 62, 98, 0.6);
+}
+
+.glass-panel-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(66, 133, 244, 0.5);
+  box-shadow: 0 10px 25px -5px rgba(11, 25, 44, 0.6), 0 0 15px rgba(27, 86, 253, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Route animations on SVG */
+.animated-path {
+  stroke-dasharray: 8 6;
+  animation: dashAnimation 1.2s linear infinite;
+}
+
+@keyframes dashAnimation {
+  from {
+    stroke-dashoffset: 28;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Beacon pulse for start/end nodes */
+@keyframes beaconPulse {
+  0% {
+    r: 10px;
+    opacity: 0.9;
+  }
+  50% {
+    r: 18px;
+    opacity: 0.3;
+  }
+  100% {
+    r: 24px;
+    opacity: 0;
+  }
+}
+
+.pulse-beacon {
+  animation: beaconPulse 1.8s ease-out infinite;
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B192C;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E3E62;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2563EB;
+}
+
+/* Toast container */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+}
+
+.toast {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Active coach visualizer */
+.coach-box {
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.coach-box:hover {
+  border-color: #3B82F6;
+  background-color: rgba(59, 130, 246, 0.15);
+}
+.coach-box.active {
+  background: linear-gradient(135deg, #1D4ED8, #2563EB);
+  border-color: #60A5FA;
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.6);
+  color: white;
+}

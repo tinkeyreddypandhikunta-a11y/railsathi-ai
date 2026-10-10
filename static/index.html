@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RailSathi AI — Smart Railway Station Navigation & Passenger Assistance</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            railNavy: '#070F2B',
+            railBlue: '#1B56FD',
+            railDark: '#0A1428',
+            railCard: '#0F1E3D',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="static/css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%200%20100%20100%22><text y=%22.9em%22 font-size=%2290%22>🚆</text></svg>">
+</head>
+<body class="min-h-screen flex flex-col bg-[#060D1E] text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- Top Disclaimer Notice (Section 20 requirement) -->
+  <div class="bg-blue-950/80 border-b border-blue-800/40 px-4 py-1.5 text-center text-[11px] text-blue-200 backdrop-blur-md flex items-center justify-center gap-2">
+    <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+    <span>Prototype demonstration using simulated data. Not connected to Indian Railways or IRCTC.</span>
+  </div>
+
+  <!-- Header & Navigation Shell -->
+  <header class="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-4 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center text-xl shadow-lg shadow-blue-600/30 ring-1 ring-blue-400/40">
+          🚆
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-extrabold tracking-tight text-white">RAILSATHI AI</h1>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
+              Open Innovation
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">A Smart Railway Station Navigation and Passenger Assistance System</p>
+        </div>
+      </div>
+
+      <!-- Station Selector & Controls -->
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <!-- Station Dropdown -->
+        <div class="hidden md:flex items-center gap-1.5 bg-slate-900/90 border border-slate-700/80 px-2.5 py-1.5 rounded-lg text-xs">
+          <span class="text-blue-400">📍</span>
+          <select id="header-station-select" class="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer text-xs">
+            <option value="CSMT_DEMO" class="bg-slate-900 text-white">CSMT Mumbai — Demo Station</option>
+            <option value="NDLS_PROTO" class="bg-slate-900 text-white">New Delhi (NDLS) — Prototype</option>
+            <option value="HWH_PROTO" class="bg-slate-900 text-white">Howrah Jn (HWH) — Prototype</option>
+          </select>
+        </div>
+
+        <!-- Role Switcher -->
+        <button 
+          id="role-toggle-btn"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition flex items-center gap-1.5 shadow-sm"
+          title="Switch between Passenger view and Station Operations"
+        >
+          <span>👤 Passenger Mode</span>
+        </button>
+
+        <!-- Notification Bell -->
+        <button 
+          class="relative p-2 rounded-lg bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-slate-300 transition"
+          onclick="App.switchTab('alerts')"
+          title="View Smart Alerts"
+        >
+          <span>🔔</span>
+          <span id="header-alert-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            5
+          </span>
+        </button>
+
+        <!-- User Profile Pill -->
+        <div class="hidden lg:flex items-center gap-2 pl-2 border-l border-slate-800 text-xs">
+          <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-blue-400">
+            RS
+          </div>
+          <span class="text-slate-300 font-medium">Demo Passenger</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Navigation Tabs -->
+    <div class="max-w-7xl mx-auto mt-3 hidden md:flex items-center gap-1 border-t border-slate-800/60 pt-2.5 overflow-x-auto">
+      <button class="nav-tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-white bg-blue-600/30 border border-blue-500/50" data-tab="dashboard">
+        <span>📊</span> Dashboard
+      </button>
+      <button class="nav-tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white" data-tab="navigation">
+        <span>🗺️</span> Station Map & Route
+      </button>
+      <button class="nav-tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white" data-tab="trains">
+        <span>🚆</span> Trains & Coach
+      </button>
+      <button class="nav-tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white" data-tab="facilities">
+        <span>🚻</span> Facilities
+      </button>
+      <button class="nav-tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white" data-tab="crowd">
+        <span>📈</span> AI Crowd Prediction
+      </button>
+      <button class="nav-tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white" data-tab="alerts">
+        <span>⚠️</span> Smart Alerts
+      </button>
+      <button class="nav-tab-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white" data-tab="operations">
+        <span>👮</span> Station Operations
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Body Content Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-8">
+
+    <!-- Hero Section & Journey Planner -->
+    <section class="glass-panel rounded-2xl p-6 lg:p-8 border border-slate-800 relative overflow-hidden shadow-2xl">
+      <!-- Background Ambient Glows -->
+      <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 max-w-4xl">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">
+          <span>✨</span> Smart Station Route Guidance
+        </span>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+          Your railway journey, smarter from entry to coach.
+        </h2>
+        <p class="text-sm sm:text-base text-slate-300 mt-2 leading-relaxed max-w-2xl">
+          Navigate crowded stations, find facilities, understand train movement and choose routes designed around your needs.
+        </p>
+
+        <!-- Journey Planner Card (Section 4 Default Demo) -->
+        <div class="mt-6 bg-slate-900/90 rounded-xl p-4 sm:p-5 border border-slate-700/80 shadow-xl">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            
+            <!-- Station -->
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Station</label>
+              <div class="bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-xs font-semibold text-white">
+                CSMT Mumbai — Demo
+              </div>
+            </div>
+
+            <!-- Train Input / Select -->
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Train Number</label>
+              <select id="select-train-number" class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-blue-500">
+                <option value="12951">12951 Rajdhani Express (Platform 6)</option>
+                <option value="12009">12009 Shatabdi Express (Platform 5)</option>
+                <option value="22221">22221 Rajdhani Spl (Platform 7)</option>
+              </select>
+            </div>
+
+            <!-- Coach & Platform -->
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Coach & Platform</label>
+              <div class="bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-xs font-semibold text-white flex justify-between">
+                <span>Coach: <strong class="text-blue-400">B4</strong></span>
+                <span class="text-slate-400">|</span>
+                <span>Platform: <strong class="text-emerald-400">6</strong></span>
+              </div>
+            </div>
+
+            <!-- Starting Point -->
+            <div>
+              <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Station Starting Point</label>
+              <select id="select-start-point" class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-blue-500">
+                <option value="entrance_a">Entrance A (South Portico)</option>
+                <option value="entrance_b">Entrance B (North Step-Free Ramp)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Accessibility Selector Row -->
+          <div class="mt-4 pt-3 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-400">Accessibility Profile:</span>
+              <select id="select-accessibility" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-semibold text-teal-400 focus:outline-none focus:border-teal-500">
+                <option value="normal">Normal Route (Fastest Walk)</option>
+                <option value="wheelchair">Wheelchair (100% Step-Free)</option>
+                <option value="elderly">Elderly / Reduced Mobility</option>
+                <option value="family">Family with Children (Stroller Friendly)</option>
+              </select>
+            </div>
+
+            <!-- Primary Action Button -->
+            <button 
+              id="btn-plan-route"
+              class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition shadow-lg shadow-blue-600/40 flex items-center justify-center gap-2"
+            >
+              <span>🧭</span>
+              <span>Plan My Route</span>
+            </button>
+          </div>
+
+          <!-- Secondary Actions -->
+          <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+            <span>Quick shortcuts:</span>
+            <button id="hero-quick-normal" class="hover:text-blue-400 underline decoration-dotted">Normal Route</button>
+            <span>•</span>
+            <button id="hero-quick-accessible" class="hover:text-teal-400 underline decoration-dotted">Accessible Route</button>
+            <span>•</span>
+            <button id="hero-quick-crowd" class="hover:text-rose-400 underline decoration-dotted">Crowd Forecast</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 1: PASSENGER DASHBOARD -->
+    <section id="tab-dashboard" class="tab-view-section space-y-6">
+      
+      <!-- Summary Cards Grid (Section 5 requirement) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Crowd Density -->
+        <div class="glass-panel p-4 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Current Platform Crowd</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span id="dash-crowd-val" class="text-3xl font-black text-rose-400 font-mono">78%</span>
+            <span class="text-[11px] px-2 py-0.5 rounded font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+              High Crowd
+            </span>
+          </div>
+          <span class="text-[11px] text-slate-400 mt-1 block">Live simulated reading</span>
+        </div>
+
+        <!-- Train Status -->
+        <div class="glass-panel p-4 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Train Status</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-2xl font-black text-emerald-400">On time</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          </div>
+          <span class="text-[11px] text-slate-400 mt-1 block">Dep: 10:25 PM • Confirmed</span>
+        </div>
+
+        <!-- Platform -->
+        <div class="glass-panel p-4 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Platform</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl font-black text-blue-400 font-mono">Platform <span id="dash-platform-val">6</span></span>
+          </div>
+          <span class="text-[11px] text-slate-400 mt-1 block">Boarding at Coach Zone B4</span>
+        </div>
+
+        <!-- Time to Coach -->
+        <div class="glass-panel p-4 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Estimated Walk Time</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span id="dash-time-val" class="text-3xl font-black text-amber-400 font-mono">7 mins</span>
+            <span class="text-xs text-slate-400">to coach</span>
+          </div>
+          <span class="text-[11px] text-slate-400 mt-1 block">Based on active route</span>
+        </div>
+      </div>
+
+      <!-- Second Row: Journey Details & Priority Alerts -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Journey Information Card -->
+        <div class="glass-panel rounded-xl p-5 border border-slate-800 lg:col-span-2">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-xs text-blue-400 font-semibold uppercase tracking-wider">Active Journey</span>
+              <h4 id="dash-train-val" class="text-lg font-bold text-white mt-0.5">12951 Rajdhani Express</h4>
+            </div>
+            <span id="dash-coach-val" class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-blue-600/30 text-blue-300 border border-blue-500/40">
+              Coach B4 (Seat 42)
+            </span>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+              <span class="text-slate-400 block text-[11px]">Selected Route</span>
+              <span id="dash-route-val" class="font-bold text-white mt-0.5 block">Route A: Fastest Route</span>
+            </div>
+            <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+              <span class="text-slate-400 block text-[11px]">Boarding Window</span>
+              <span class="font-bold text-white mt-0.5 block">10:10 PM – 10:25 PM</span>
+            </div>
+            <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+              <span class="text-slate-400 block text-[11px]">Vertical Accessibility</span>
+              <span class="font-bold text-teal-400 mt-0.5 block">Step-Free Option Available</span>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-xs text-slate-400">Want to inspect path or vertical transitions on the station blueprint?</p>
+            <button 
+              class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition"
+              onclick="App.switchTab('navigation')"
+            >
+              Open Interactive Station Map →
+            </button>
+          </div>
+        </div>
+
+        <!-- Priority Alerts Snippet -->
+        <div class="glass-panel rounded-xl p-5 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+                <span>⚠️</span> Active Station Alerts
+              </h4>
+              <span class="text-xs text-rose-400 font-bold">1 Critical</span>
+            </div>
+
+            <div class="mt-3 space-y-2.5">
+              <div class="bg-rose-950/20 border border-rose-500/30 p-2.5 rounded-lg text-xs">
+                <span class="font-bold text-rose-300 block">Platform 6 Rush: 78% → 88%</span>
+                <p class="text-slate-300 text-[11px] mt-0.5">Surge expected at 10:25 PM. Entrance B recommended.</p>
+              </div>
+              <div class="bg-emerald-950/20 border border-emerald-500/30 p-2.5 rounded-lg text-xs">
+                <span class="font-bold text-emerald-300 block">Lift 2 Operational</span>
+                <p class="text-slate-300 text-[11px] mt-0.5">Direct step-free connection active to Platform 6.</p>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            class="mt-4 w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+            onclick="App.switchTab('alerts')"
+          >
+            View all 5 Alerts & Notifications →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: STATION MAP & ROUTE PLANNER (CRITICAL FEATURE) -->
+    <section id="tab-navigation" class="tab-view-section hidden space-y-6">
+      
+      <!-- Facility Active Return Banner (when a facility route is clicked) -->
+      <div id="facility-active-return-banner" class="hidden"></div>
+
+      <!-- Station Map Container -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>🗺️</span> Interactive Station Map
+            </h3>
+            <p class="text-xs text-slate-400">Select any node to inspect facilities, bridges, lifts, and platform boarding zones.</p>
+          </div>
+        </div>
+
+        <div id="map-container"></div>
+      </div>
+
+      <!-- Route Recommendations Section (Section 7) -->
+      <div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>🧭</span> Route Recommendations
+            </h3>
+            <p class="text-xs text-slate-400">Algorithmic Dijkstra graph recommendations calculated for your destination coach.</p>
+          </div>
+          <div class="text-xs text-slate-400">
+            Destination: <strong class="text-white">Platform 6 • Coach Zone B4</strong>
+          </div>
+        </div>
+
+        <!-- Route Cards Container (Route A, Route B, Route C) -->
+        <div id="route-cards-container" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- Turn-by-Turn Waypoints Accordion -->
+      <div id="turn-by-turn-container"></div>
+    </section>
+
+    <!-- TAB 3: TRAINS & COACH POSITIONING (Section 11) -->
+    <section id="tab-trains" class="tab-view-section hidden space-y-6">
+      <div class="glass-panel rounded-xl p-6 border border-slate-800">
+        <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-800 gap-4">
+          <div>
+            <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Simulated Train Rake Data</span>
+            <h3 class="text-xl font-bold text-white mt-1">12951 Rajdhani Express — Coach Positioning</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Route: Mumbai Central (CSMT Demo) → New Delhi (NDLS) • Platform 6</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              Status: On time
+            </span>
+          </div>
+        </div>
+
+        <!-- Train Metrics Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-xs">
+          <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block text-[11px]">Boarding Begins</span>
+            <span class="text-sm font-bold text-white font-mono mt-0.5 block">10:10 PM</span>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block text-[11px]">Departure Time</span>
+            <span class="text-sm font-bold text-white font-mono mt-0.5 block">10:25 PM</span>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block text-[11px]">Assigned Platform</span>
+            <span class="text-sm font-bold text-blue-400 font-mono mt-0.5 block">Platform 6</span>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block text-[11px]">Your Seat</span>
+            <span class="text-sm font-bold text-emerald-400 font-mono mt-0.5 block">Seat 42 (Window)</span>
+          </div>
+        </div>
+
+        <!-- Coach Sequence Visualizer (ENGINE -> A1 -> A2 -> B1 -> B2 -> B3 -> B4 -> C1) -->
+        <div class="mt-6">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 class="text-sm font-bold text-white">Coach Position Visualizer (Platform 6 Layout)</h4>
+              <p class="text-xs text-slate-400">Click any coach to highlight positioning and walking distance along the platform.</p>
+            </div>
+            <span id="selected-coach-indicator" class="text-xs font-mono font-bold text-blue-400">Coach B4 (Seat 42)</span>
+          </div>
+
+          <div id="coach-sequence-container" class="bg-slate-950/80 p-4 rounded-xl border border-slate-800"></div>
+
+          <!-- Coach Guidance Notes -->
+          <div class="mt-4 p-3 rounded-lg bg-blue-950/30 border border-blue-500/20 text-xs text-slate-300 flex items-start gap-2.5">
+            <span class="text-blue-400 text-base">ℹ️</span>
+            <div>
+              <strong class="text-blue-200">Coach B4 Boarding Zone Note:</strong>
+              <p class="mt-0.5 text-slate-400">Coach B4 stops directly opposite Overhead Display Indicator #14 on Platform 6, approximately 60 meters from Lift 2 exit. Digital coach guidance signposts active.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: FACILITIES DASHBOARD (Section 12) -->
+    <section id="tab-facilities" class="tab-view-section hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-800 gap-2">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🚻</span> Station Facilities & Waypoint Navigator
+          </h3>
+          <p class="text-xs text-slate-400">Click any facility below to map direct turn-by-turn routes on the station layout.</p>
+        </div>
+        <span class="text-xs text-slate-400">6 Verified Facilities Available</span>
+      </div>
+
+      <!-- Facility Cards Grid (6 cards) -->
+      <div id="facility-cards-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- TAB 5: AI CROWD PREDICTION (Section 9) -->
+    <section id="tab-crowd" class="tab-view-section hidden space-y-6">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>📈</span> Predictive Crowd Intelligence
+          </h3>
+          <p class="text-xs text-slate-400">Predictive passenger flow forecasting powered by explainable station heuristics.</p>
+        </div>
+      </div>
+
+      <div id="crowd-dashboard-container"></div>
+    </section>
+
+    <!-- TAB 6: SMART ALERTS (Section 10) -->
+    <section id="tab-alerts" class="tab-view-section hidden space-y-6">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>⚠️</span> Smart Contextual Alerts
+          </h3>
+          <p class="text-xs text-slate-400">Real-time station advisories, crowd bottlenecks, and accessibility notifications.</p>
+        </div>
+      </div>
+
+      <div id="alerts-container"></div>
+    </section>
+
+    <!-- TAB 7: STATION OPERATIONS (Staff View, Section 13) -->
+    <section id="tab-operations" class="tab-view-section hidden space-y-6">
+      <div id="operations-dashboard-container"></div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar (Section 17 responsive requirement) -->
+  <nav class="md:hidden sticky bottom-0 z-50 glass-panel border-t border-slate-800/90 py-2 px-3 backdrop-blur-xl">
+    <div class="grid grid-cols-6 gap-1 text-center">
+      <button class="mobile-nav-btn flex flex-col items-center py-1 text-blue-400" data-tab="dashboard">
+        <span class="text-base">📊</span>
+        <span class="text-[9px] font-bold mt-0.5">Dash</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-1 text-slate-400" data-tab="navigation">
+        <span class="text-base">🗺️</span>
+        <span class="text-[9px] font-bold mt-0.5">Map</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-1 text-slate-400" data-tab="trains">
+        <span class="text-base">🚆</span>
+        <span class="text-[9px] font-bold mt-0.5">Train</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-1 text-slate-400" data-tab="facilities">
+        <span class="text-base">🚻</span>
+        <span class="text-[9px] font-bold mt-0.5">Facilities</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-1 text-slate-400" data-tab="crowd">
+        <span class="text-base">📈</span>
+        <span class="text-[9px] font-bold mt-0.5">Crowd</span>
+      </button>
+      <button class="mobile-nav-btn flex flex-col items-center py-1 text-slate-400" data-tab="alerts">
+        <span class="text-base">⚠️</span>
+        <span class="text-[9px] font-bold mt-0.5">Alerts</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-slate-950/80 py-6 px-4 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto space-y-2">
+      <p class="font-semibold text-slate-300">
+        RailSathi AI — From station entrance to your coach, the smart way.
+      </p>
+      <p class="text-[11px] text-slate-400">
+        Hackathon Prototype • Open Innovation Category • Chhatrapati Shivaji Maharaj Terminus (CSMT) Model
+      </p>
+      <p class="text-[10px] text-slate-400">
+        Prototype demonstration using simulated data. Not connected to Indian Railways or IRCTC.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="static/js/map.js"></script>
+  <script src="static/js/routes.js"></script>
+  <script src="static/js/facilities.js"></script>
+  <script src="static/js/crowd.js"></script>
+  <script src="static/js/alerts.js"></script>
+  <script src="static/js/operations.js"></script>
+  <script src="static/js/app.js"></script>
+</body>
+</html>
